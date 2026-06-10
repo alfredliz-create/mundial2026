@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CIAL Mundial 2026 — Live Leaderboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #060d1a;
+      color: #e5e7eb;
+      font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: linear-gradient(135deg, #0050F0 0%, #003db5 100%);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #FFD700;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-logo img { height: 36px; }
+    .header-title { text-align: center; flex: 1; padding: 0 16px; }
+    .header-title h1 { font-size: 20px; font-weight: 900; color: #fff; letter-spacing: -0.5px; }
+    .header-title span { font-size: 12px; color: rgba(255,255,255,0.6); letter-spacing: 2px; text-transform: uppercase; }
+    .header-right { text-align: right; min-width: 140px; }
+    .refresh-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px; padding: 5px 12px; font-size: 11px; color: rgba(255,255,255,0.7);
+    }
+    .refresh-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: #22c55e;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .last-updated { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+
+    /* ── MAIN ── */
+    .container { max-width: 960px; margin: 0 auto; padding: 32px 16px 64px; }
+
+    /* ── TOURNAMENT INFO BAR ── */
+    .info-bar {
+      background: #111827; border-radius: 8px; padding: 12px 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 32px; flex-wrap: wrap; gap: 12px;
+    }
+    .info-item { text-align: center; }
+    .info-item .val { font-size: 18px; font-weight: 800; color: #FFD700; }
+    .info-item .lbl { font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+    .phase-badge {
+      background: #0050F0; color: #fff; border-radius: 20px;
+      padding: 6px 16px; font-size: 12px; font-weight: 700;
+    }
+
+    /* ── PODIUM ── */
+    .podium-section { margin-bottom: 40px; }
+    .podium-section h2 { font-size: 13px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; text-align: center; }
+    .podium { display: flex; justify-content: center; align-items: flex-end; gap: 16px; }
+
+    .podium-card {
+      border-radius: 12px; text-align: center; padding: 20px 16px;
+      position: relative; overflow: hidden; flex: 1; max-width: 220px;
+      transition: transform 0.2s;
+    }
+    .podium-card:hover { transform: translateY(-4px); }
+
+    .podium-card.gold {
+      background: linear-gradient(160deg, #1a1200 0%, #2a1f00 100%);
+      border: 1px solid #FFD700; order: 2;
+    }
+    .podium-card.silver {
+      background: linear-gradient(160deg, #0f0f0f 0%, #1a1a1a 100%);
+      border: 1px solid #9ca3af; order: 1;
+    }
+    .podium-card.bronze {
+      background: linear-gradient(160deg, #1a0e00 0%, #2a1800 100%);
+      border: 1px solid #d97706; order: 3;
+    }
+
+    .podium-rank {
+      font-size: 28px; margin-bottom: 12px;
+    }
+    .podium-photo-wrap {
+      position: relative; display: inline-block; margin-bottom: 12px;
+    }
+    .podium-photo {
+      width: 72px; height: 72px; border-radius: 50%; object-fit: cover;
+    }
+    .podium-card.gold .podium-photo { border: 3px solid #FFD700; width: 84px; height: 84px; }
+    .podium-card.silver .podium-photo { border: 3px solid #9ca3af; }
+    .podium-card.bronze .podium-photo { border: 3px solid #d97706; }
+
+    .podium-avatar {
+      width: 72px; height: 72px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; font-weight: 800; color: #fff;
+    }
+    .podium-card.gold .podium-avatar { width: 84px; height: 84px; background: #92400e; border: 3px solid #FFD700; font-size: 28px; }
+    .podium-card.silver .podium-avatar { background: #374151; border: 3px solid #9ca3af; }
+    .podium-card.bronze .podium-avatar { background: #78350f; border: 3px solid #d97706; }
+
+    .podium-name { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+    .podium-dept { font-size: 11px; color: #6b7280; margin-bottom: 8px; }
+    .podium-pick { font-size: 12px; color: #9ca3af; margin-bottom: 12px; }
+    .podium-pick span { color: #FFD700; font-weight: 700; }
+    .podium-points { font-size: 28px; font-weight: 900; }
+    .podium-card.gold .podium-points { color: #FFD700; font-size: 32px; }
+    .podium-card.silver .podium-points { color: #d1d5db; }
+    .podium-card.bronze .podium-points { color: #d97706; }
+    .pts-label { font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* ── FULL LEADERBOARD TABLE ── */
+    .table-section h2 { font-size: 13px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; }
+
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-btn {
+      background: #1f2937; border: 1px solid #374151; color: #9ca3af;
+      padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer;
+      transition: all 0.15s; font-family: inherit;
+    }
+    .filter-btn:hover, .filter-btn.active {
+      background: #0050F0; border-color: #0050F0; color: #fff;
+    }
+
+    .lb-table { width: 100%; border-collapse: collapse; }
+    .lb-table thead tr {
+      border-bottom: 1px solid #1f2937;
+    }
+    .lb-table thead th {
+      font-size: 10px; font-weight: 700; color: #6b7280;
+      text-transform: uppercase; letter-spacing: 1px;
+      padding: 10px 12px; text-align: left;
+    }
+    .lb-table thead th.right { text-align: right; }
+
+    .lb-row {
+      border-bottom: 1px solid #111827;
+      transition: background 0.15s;
+    }
+    .lb-row:hover { background: #0f172a; }
+    .lb-row.top3 { background: rgba(255,215,0,0.03); }
+
+    .lb-row td { padding: 12px; vertical-align: middle; }
+
+    .rank-cell { width: 40px; }
+    .rank-num {
+      font-size: 14px; font-weight: 800; color: #6b7280;
+      width: 28px; height: 28px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .rank-num.r1 { background: linear-gradient(135deg,#b8860b,#FFD700); color: #000; }
+    .rank-num.r2 { background: linear-gradient(135deg,#6b7280,#d1d5db); color: #000; }
+    .rank-num.r3 { background: linear-gradient(135deg,#92400e,#d97706); color: #fff; }
+
+    .player-cell { display: flex; align-items: center; gap: 12px; }
+    .player-photo {
+      width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0;
+    }
+    .player-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .player-name { font-size: 14px; font-weight: 600; color: #fff; }
+    .player-meta { font-size: 11px; color: #6b7280; margin-top: 2px; }
+    .player-pick { font-size: 11px; color: #9ca3af; }
+    .player-pick strong { color: #FFD700; }
+
+    .bar-cell { width: 180px; }
+    .bar-wrap { background: #1f2937; border-radius: 4px; height: 8px; overflow: hidden; }
+    .bar-fill {
+      height: 100%; border-radius: 4px;
+      background: linear-gradient(90deg, #0050F0, #06b6d4);
+      width: 0%; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .bar-fill.top { background: linear-gradient(90deg, #b8860b, #FFD700); }
+
+    .pts-cell { text-align: right; }
+    .pts-total { font-size: 18px; font-weight: 800; color: #fff; }
+    .pts-breakdown { font-size: 10px; color: #6b7280; margin-top: 2px; }
+
+    .vote-status { font-size: 11px; text-align: center; }
+    .vote-status.ok { color: #22c55e; }
+    .vote-status.miss { color: #ef4444; }
+    .vote-status.pending { color: #f59e0b; }
+
+    /* ── PRIZES FOOTER ── */
+    .prizes-bar {
+      background: #111827; border-radius: 8px; padding: 20px 24px;
+      margin-top: 32px; display: flex; justify-content: center; gap: 32px; flex-wrap: wrap;
+    }
+    .prize-item { text-align: center; }
+    .prize-item .medal { font-size: 24px; }
+    .prize-item .amount { font-size: 18px; font-weight: 800; color: #FFD700; }
+    .prize-item .label { font-size: 11px; color: #6b7280; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      .header { flex-direction: column; gap: 10px; text-align: center; }
+      .header-right { min-width: auto; }
+      .podium { flex-direction: column; align-items: center; }
+      .podium-card { order: unset !important; max-width: 100%; width: 100%; }
+      .bar-cell { display: none; }
+      .info-bar { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo">
+    <a href="https://en.cialdnb.com/" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:10px;">
+      <img src="https://userimg-assets.customeriomail.com/images/client-env-127469/01KPDZCHB6HAKXTN054HZP88KM.gif"
+           alt="" style="height:36px; width:auto; display:block;" />
+      <span style="display:inline-block; padding-left:10px; border-left:1px solid rgba(255,255,255,0.25);">
+        <img src="https://userimg-assets.customeriomail.com/images/client-env-127469/01KPDZD0D9RY48BF4CVK6NABA3.png"
+             alt="CIAL" style="height:20px; width:auto; display:block;" />
+        <span style="display:block; color:rgba(255,255,255,0.45); font-size:8px; letter-spacing:1.5px; margin-top:3px;">dun &amp; bradstreet</span>
+      </span>
+    </a>
+  </div>
+  <div class="header-title">
+    <h1>⚽ CIAL MUNDIAL 2026</h1>
+    <span>Live Leaderboard</span>
+  </div>
+  <div class="header-right">
+    <div class="refresh-badge">
+      <div class="refresh-dot"></div>
+      <span>Live · 60s refresh</span>
+    </div>
+    <div class="last-updated" id="lastUpdated">Updating...</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- TOURNAMENT STATUS BAR -->
+  <div class="info-bar">
+    <div class="info-item">
+      <div class="val" id="participantCount">—</div>
+      <div class="lbl">Players</div>
+    </div>
+    <div class="info-item">
+      <div class="val" id="currentPhase">—</div>
+      <div class="lbl">Phase</div>
+    </div>
+    <div class="info-item">
+      <div class="val" id="topScore">—</div>
+      <div class="lbl">Top Score</div>
+    </div>
+    <div class="info-item">
+      <div class="val" id="avgScore">—</div>
+      <div class="lbl">Avg Score</div>
+    </div>
+    <div class="phase-badge" id="nextEvent">⚽ Starts June 11</div>
+  </div>
+
+  <!-- PODIUM -->
+  <div class="podium-section">
+    <h2>🏆 Top 3</h2>
+    <div class="podium" id="podium"></div>
+  </div>
+
+  <!-- FULL TABLE -->
+  <div class="table-section">
+    <h2>Full Rankings</h2>
+
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-btn active" onclick="filterBy('all', this)">All</button>
+    </div>
+
+    <table class="lb-table">
+      <thead>
+        <tr>
+          <th style="width:50px;">#</th>
+          <th>Player</th>
+          <th>Champion Pick</th>
+          <th class="bar-cell" style="width:180px;">Progress</th>
+          <th class="right" style="width:120px;">Points</th>
+          <th class="right" style="width:60px;">Voted</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboardBody"></tbody>
+    </table>
+  </div>
+
+  <!-- PRIZES -->
+  <div class="prizes-bar">
+    <div class="prize-item"><div class="medal">🥇</div><div class="amount">$150</div><div class="label">Dinner for 2</div></div>
+    <div class="prize-item"><div class="medal">🥈</div><div class="amount">$75</div><div class="label">Gift Card</div></div>
+    <div class="prize-item"><div class="medal">🥉</div><div class="amount">$50</div><div class="label">Gift Card</div></div>
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────────
+//  CONFIGURATION — update these before deploying
+// ─────────────────────────────────────────────────
+const CONFIG = {
+  // Publish your Google Sheet as CSV and paste the URL here.
+  // File → Share → Publish to web → Sheet1 → CSV → Copy link
+  googleSheetCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSbflmuA-KB6MRocqcaKGFTg3s_RnFuMJ79aHQy2FuPE48EbKlH1qrzbQrDebNfNLxwfy-4qIY7EDqX/pub?gid=0&single=true&output=csv',
+
+  // Your Microsoft 365 tenant SharePoint domain (for auto-loading Teams profile photos)
+  // Example: 'cialdnb.sharepoint.com'
+  sharePointDomain: 'cialdnb.sharepoint.com',
+
+  // How often to refresh data (milliseconds)
+  refreshInterval: 60000,
+
+  // Max points possible (for progress bar scaling)
+  maxPoints: 515,
+
+  // Current tournament phase label
+  currentPhase: 'Oracle Phase',
+  nextEvent: '⚽ Kicks off June 11',
+};
+
+// ─────────────────────────────────────────────────
+//  DEMO DATA — replace with live sheet data
+//  Sheet columns: name, email, department, country,
+//  champion_pick, cinderella_pick, golden_boot,
+//  oracle_pts, voting_pts, bonus_pts, total_pts,
+//  votes_submitted, votes_total
+// ─────────────────────────────────────────────────
+const DEMO_DATA = [
+  { name:'Sofia Ramirez',    email:'sofia.ramirez@cialdnb.com',   dept:'Sales',      country:'🇲🇽',  champion:'🇧🇷 Brazil',    oracle:120, voting:185, bonus:25, total:330, votes:24, votes_total:27 },
+  { name:'Daniel Cohen',     email:'daniel.cohen@cialdnb.com',    dept:'Israel',     country:'🇮🇱',  champion:'🇫🇷 France',    oracle:95,  voting:160, bonus:10, total:265, votes:22, votes_total:27 },
+  { name:'Camila Duarte',    email:'camila.duarte@cialdnb.com',   dept:'Finance',    country:'🇧🇷',  champion:'🇧🇷 Brazil',    oracle:110, voting:140, bonus:5,  total:255, votes:21, votes_total:27 },
+  { name:'Rodrigo Mendes',   email:'rodrigo.mendes@cialdnb.com',  dept:'Operations', country:'🇧🇷',  champion:'🇦🇷 Argentina', oracle:80,  voting:155, bonus:15, total:250, votes:23, votes_total:27 },
+  { name:'Valentina Cruz',   email:'valentina.cruz@cialdnb.com',  dept:'HR',         country:'🇨🇴',  champion:'🇪🇸 Spain',     oracle:60,  voting:150, bonus:20, total:230, votes:20, votes_total:27 },
+  { name:'Mateo Silva',      email:'mateo.silva@cialdnb.com',     dept:'Sales',      country:'🇦🇷',  champion:'🇦🇷 Argentina', oracle:75,  voting:130, bonus:15, total:220, votes:19, votes_total:27 },
+  { name:'Aisha Okonkwo',    email:'aisha.okonkwo@cialdnb.com',   dept:'IT',         country:'🇿🇦',  champion:'🇲🇦 Morocco',   oracle:55,  voting:140, bonus:5,  total:200, votes:18, votes_total:27 },
+  { name:'Pedro Alves',      email:'pedro.alves@cialdnb.com',     dept:'Finance',    country:'🇧🇷',  champion:'🇩🇪 Germany',   oracle:40,  voting:135, bonus:20, total:195, votes:22, votes_total:27 },
+  { name:'Andrea Gómez',     email:'andrea.gomez@cialdnb.com',    dept:'Marketing',  country:'🇲🇽',  champion:'🇲🇽 Mexico',    oracle:85,  voting:100, bonus:0,  total:185, votes:16, votes_total:27 },
+  { name:'Lior Ben-David',   email:'lior.bendavid@cialdnb.com',   dept:'Israel',     country:'🇮🇱',  champion:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 England',   oracle:50,  voting:120, bonus:10, total:180, votes:15, votes_total:27 },
+  { name:'Carolina Rojas',   email:'carolina.rojas@cialdnb.com',  dept:'Operations', country:'🇨🇱',  champion:'🇦🇷 Argentina', oracle:35,  voting:125, bonus:5,  total:165, votes:17, votes_total:27 },
+  { name:'Marcus Oliveira',  email:'marcus.oliveira@cialdnb.com', dept:'Sales',      country:'🇧🇷',  champion:'🇧🇷 Brazil',    oracle:70,  voting:80,  bonus:10, total:160, votes:14, votes_total:27 },
+];
+
+// ─────────────────────────────────────────────────
+//  PHOTO HELPERS
+// ─────────────────────────────────────────────────
+function getTeamsPhotoUrl(email) {
+  // Loads directly from Microsoft 365 — works when user is logged into M365 in same browser
+  return `https://${CONFIG.sharePointDomain}/_layouts/15/userphoto.aspx?size=L&accountname=${encodeURIComponent(email)}`;
+}
+
+function getAvatarColor(name) {
+  const colors = ['#0050F0','#7c3aed','#059669','#dc2626','#d97706','#0891b2','#be185d'];
+  let hash = 0;
+  for (let c of name) hash = c.charCodeAt(0) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+}
+
+function getInitials(name) {
+  return name.split(' ').slice(0,2).map(n => n[0]).join('').toUpperCase();
+}
+
+function photoEl(person, size = 40, cls = 'player-photo') {
+  const url = getTeamsPhotoUrl(person.email);
+  const initials = getInitials(person.name);
+  const color = getAvatarColor(person.name);
+  // Try photo, fall back to initials avatar
+  return `
+    <img class="${cls}" src="${url}" alt="${person.name}"
+         style="width:${size}px;height:${size}px;"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+    <div class="${cls.replace('photo','avatar')}"
+         style="width:${size}px;height:${size}px;background:${color};display:none;
+                border-radius:50%;align-items:center;justify-content:center;
+                font-size:${Math.floor(size*0.35)}px;font-weight:800;color:#fff;flex-shrink:0;">
+      ${initials}
+    </div>`;
+}
+
+// ─────────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────────
+let allData = [];
+let activeFilter = 'all';
+
+function renderPodium(data) {
+  const top3 = data.slice(0, 3);
+  const classes = ['silver','gold','bronze'];
+  const ranks   = ['🥈','🥇','🥉'];
+  const order   = [1, 0, 2]; // gold in center
+
+  const podiumEl = document.getElementById('podium');
+  podiumEl.innerHTML = order.map(i => {
+    const p = top3[i];
+    if (!p) return '';
+    const photoSize = i === 0 ? 84 : 72;
+    return `
+      <div class="podium-card ${classes[i]}">
+        <div class="podium-rank">${ranks[i]}</div>
+        <div class="podium-photo-wrap" style="display:flex;justify-content:center;">
+          ${photoEl(p, photoSize, `podium-photo`)}
+        </div>
+        <div class="podium-name">${p.name}</div>
+        <div class="podium-dept">${p.country} ${p.dept}</div>
+        <div class="podium-pick">Backing <span>${p.champion}</span></div>
+        <div class="podium-points">${p.total}</div>
+        <div class="pts-label">points</div>
+      </div>`;
+  }).join('');
+}
+
+function renderTable(data) {
+  const maxPts = data[0]?.total || CONFIG.maxPoints;
+  const body = document.getElementById('leaderboardBody');
+
+  body.innerHTML = data.map((p, idx) => {
+    const rank = idx + 1;
+    const rankClass = rank <= 3 ? `r${rank}` : '';
+    const pct = Math.round((p.total / CONFIG.maxPoints) * 100);
+    const voteColor = p.votes === p.votes_total ? 'ok' : p.votes >= p.votes_total - 2 ? 'pending' : 'miss';
+    const voteIcon  = p.votes === p.votes_total ? '✅' : p.votes >= p.votes_total - 2 ? '⚠️' : '❌';
+
+    return `
+      <tr class="lb-row ${rank <= 3 ? 'top3' : ''}" data-dept="${p.dept}">
+        <td class="rank-cell"><div class="rank-num ${rankClass}">${rank}</div></td>
+        <td>
+          <div class="player-cell">
+            ${photoEl(p, 40, 'player-photo')}
+            <div>
+              <div class="player-name">${p.name}</div>
+              <div class="player-meta">${p.country} ${p.dept}</div>
+            </div>
+          </div>
+        </td>
+        <td><div class="player-pick">🏆 <strong>${p.champion}</strong></div></td>
+        <td class="bar-cell">
+          <div class="bar-wrap">
+            <div class="bar-fill ${rank <= 3 ? 'top' : ''}" style="width:0%" data-pct="${pct}"></div>
+          </div>
+        </td>
+        <td class="pts-cell">
+          <div class="pts-total">${p.total}</div>
+          <div class="pts-breakdown">${p.oracle}+${p.voting}+${p.bonus}</div>
+        </td>
+        <td>
+          <div class="vote-status ${voteColor}" title="${p.votes}/${p.votes_total} votes submitted">
+            ${voteIcon} ${p.votes}/${p.votes_total}
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+
+  // Animate bars after render
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.bar-fill').forEach(bar => {
+        bar.style.width = bar.dataset.pct + '%';
+      });
+    });
+  });
+}
+
+function renderFilters(data) {
+  const depts = [...new Set(data.map(p => p.dept))].sort();
+  const bar = document.getElementById('filterBar');
+  bar.innerHTML = `<button class="filter-btn ${activeFilter==='all'?'active':''}" onclick="filterBy('all',this)">All</button>` +
+    depts.map(d => `<button class="filter-btn ${activeFilter===d?'active':''}" onclick="filterBy('${d}',this)">${d}</button>`).join('');
+}
+
+function filterBy(dept, btn) {
+  activeFilter = dept;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const filtered = dept === 'all' ? allData : allData.filter(p => p.dept === dept);
+  renderTable(filtered);
+}
+
+function renderStats(data) {
+  document.getElementById('participantCount').textContent = data.length;
+  document.getElementById('currentPhase').textContent = CONFIG.currentPhase;
+  document.getElementById('topScore').textContent = data[0]?.total ?? '—';
+  document.getElementById('avgScore').textContent = data.length
+    ? Math.round(data.reduce((s, p) => s + p.total, 0) / data.length)
+    : '—';
+  document.getElementById('nextEvent').textContent = CONFIG.nextEvent;
+}
+
+function updateTimestamp() {
+  const now = new Date();
+  document.getElementById('lastUpdated').textContent =
+    'Updated ' + now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+
+// ─────────────────────────────────────────────────
+//  DATA LOADING — Google Sheet CSV or demo data
+// ─────────────────────────────────────────────────
+function parseSheetCsv(csvText) {
+  const lines = csvText.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g,''));
+  return lines.slice(1).map(line => {
+    const vals = line.split(',').map(v => v.trim().replace(/"/g,''));
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = vals[i] ?? '');
+    return {
+      name:   obj.name,
+      email:  obj.email,
+      dept:   obj.department,
+      country:obj.country,
+      champion: obj.champion_pick,
+      oracle: parseInt(obj.oracle_pts) || 0,
+      voting: parseInt(obj.voting_pts) || 0,
+      bonus:  parseInt(obj.bonus_pts)  || 0,
+      total:  parseInt(obj.total_pts)  || 0,
+      votes:  parseInt(obj.votes_submitted) || 0,
+      votes_total: parseInt(obj.votes_total) || 27,
+    };
+  }).filter(p => p.name).sort((a, b) => b.total - a.total);
+}
+
+async function loadData() {
+  let data;
+  try {
+    if (CONFIG.googleSheetCsvUrl && CONFIG.googleSheetCsvUrl !== 'YOUR_GOOGLE_SHEET_CSV_URL_HERE') {
+      const res = await fetch(CONFIG.googleSheetCsvUrl + '&t=' + Date.now());
+      const csv = await res.text();
+      data = parseSheetCsv(csv);
+    } else {
+      data = DEMO_DATA;
+    }
+  } catch (e) {
+    console.warn('Sheet fetch failed, using demo data:', e);
+    data = DEMO_DATA;
+  }
+
+  allData = data;
+  const filtered = activeFilter === 'all' ? data : data.filter(p => p.dept === activeFilter);
+
+  renderStats(data);
+  renderPodium(data);
+  renderFilters(data);
+  renderTable(filtered);
+  updateTimestamp();
+}
+
+// ─────────────────────────────────────────────────
+//  BOOT
+// ─────────────────────────────────────────────────
+loadData();
+setInterval(loadData, CONFIG.refreshInterval);
+</script>
+</body>
+</html>
