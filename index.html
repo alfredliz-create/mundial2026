@@ -69,7 +69,7 @@
     @keyframes slideInLeft  { from { transform: translateX(-120px); opacity:0; } to { transform: translateX(0); opacity:1; } }
     @keyframes slideInRight { from { transform: translateX(120px);  opacity:0; } to { transform: translateX(0); opacity:1; } }
     @keyframes dropIn       { from { transform: translateY(-80px) scale(0.8); opacity:0; } to { transform: translateY(0) scale(1); opacity:1; } }
-    @keyframes goldPulse    { 0%,100% { box-shadow: 0 0 20px #FFD700, 0 0 40px #FFD70066; } 50% { box-shadow: 0 0 40px #FFD700, 0 0 80px #FFD700aa; } }
+    @keyframes goldPulse    { 0%,100% { opacity:1; box-shadow: 0 0 20px #FFD700, 0 0 40px #FFD70066; } 50% { opacity:1; box-shadow: 0 0 40px #FFD700, 0 0 80px #FFD700aa; } }
     @keyframes confettiFall { 0% { transform: translateY(-20px) rotate(0deg); opacity:1; } 100% { transform: translateY(110vh) rotate(720deg); opacity:0; } }
     @keyframes trophyBounce { 0%,100%{transform:scale(1);} 25%{transform:scale(1.4) rotate(-15deg);} 75%{transform:scale(1.4) rotate(15deg);} }
 
@@ -806,12 +806,12 @@ let podiumRevealed = false;
 
 function renderPodium(data) {
   const top3 = data.slice(0, 3);
-  const classes = ['silver','gold','bronze'];
-  const ranks   = ['🥈','🥇','🥉'];
-  const order   = [1, 0, 2]; // gold in center
+  // rank 0=1st→gold, 1=2nd→silver, 2=3rd→bronze; CSS flex order puts gold in center
+  const classes = ['gold','silver','bronze'];
+  const ranks   = ['🥇','🥈','🥉'];
 
   const podiumEl = document.getElementById('podium');
-  podiumEl.innerHTML = order.map(i => {
+  podiumEl.innerHTML = [0, 1, 2].map(i => {
     const p = top3[i];
     if (!p) return '';
     const photoSize = i === 0 ? 84 : 72;
