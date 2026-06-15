@@ -405,18 +405,20 @@ let activeFilter = 'all';
 
 function renderPodium(data) {
   const top3 = data.slice(0, 3);
-  const classes = ['silver','gold','bronze'];
-  const ranks   = ['🥈','🥇','🥉'];
-  const order   = [1, 0, 2]; // gold in center
+  // rank index: 0=1st, 1=2nd, 2=3rd
+  const classes = ['gold', 'silver', 'bronze'];
+  const ranks   = ['🥇', '🥈', '🥉'];
+  // display order: 2nd on left, 1st in center, 3rd on right
+  const displayOrder = [1, 0, 2];
 
   const podiumEl = document.getElementById('podium');
-  podiumEl.innerHTML = order.map(i => {
-    const p = top3[i];
+  podiumEl.innerHTML = displayOrder.map(rankIdx => {
+    const p = top3[rankIdx];
     if (!p) return '';
-    const photoSize = i === 0 ? 84 : 72;
+    const photoSize = rankIdx === 0 ? 84 : 72;
     return `
-      <div class="podium-card ${classes[i]}">
-        <div class="podium-rank">${ranks[i]}</div>
+      <div class="podium-card ${classes[rankIdx]}">
+        <div class="podium-rank">${ranks[rankIdx]}</div>
         <div class="podium-photo-wrap" style="display:flex;justify-content:center;">
           ${photoEl(p, photoSize, `podium-photo`)}
         </div>
