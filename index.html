@@ -462,7 +462,7 @@ function renderTable(data) {
         </td>
         <td class="pts-cell">
           <div class="pts-total">${p.total}</div>
-          <div class="pts-breakdown">${p.oracle}+${p.voting}+${p.bonus}</div>
+          <div class="pts-breakdown">${p.dayPts && p.dayPts.length ? p.dayPts.join('+') : p.voting}</div>
         </td>
         <td>
           <div class="vote-status ${voteColor}" title="${p.votes}/${p.votes_total} votes submitted">
@@ -534,7 +534,11 @@ function parseSheetCsv(csvText) {
       bonus:  parseInt(obj.bonus_pts)  || 0,
       total:  parseInt(obj.total_pts)  || 0,
       votes:  parseInt(obj.votes_submitted) || 0,
-      votes_total: parseInt(obj.votes_total) || 27,
+      votes_total: parseInt(obj.votes_total) || 0,
+      dayPts: Object.keys(obj)
+        .filter(k => /^d\d+_pts$/.test(k))
+        .sort((a,b) => parseInt(a.match(/\d+/)[0]) - parseInt(b.match(/\d+/)[0]))
+        .map(k => parseInt(obj[k]) || 0),
     };
   }).filter(p => p.name).sort((a, b) => b.total - a.total);
 }
