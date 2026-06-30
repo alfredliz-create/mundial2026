@@ -210,6 +210,35 @@
     .vote-status.miss { color: #ef4444; }
     .vote-status.pending { color: #f59e0b; }
 
+    /* ── ON THE RISE ── */
+    .rise-section { margin-bottom: 40px; }
+    .rise-section h2 { font-size: 13px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; }
+    .rise-cards { display: flex; gap: 12px; flex-wrap: wrap; }
+    .rise-card {
+      background: #111827; border: 1px solid #1f2937; border-radius: 10px;
+      padding: 14px 16px; flex: 1; min-width: 160px; max-width: 220px;
+      position: relative; overflow: hidden;
+    }
+    .rise-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, #f97316, #FFD700);
+    }
+    .rise-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .rise-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .rise-name { font-size: 13px; font-weight: 700; color: #fff; line-height: 1.2; }
+    .rise-dept { font-size: 10px; color: #6b7280; }
+    .rise-stats { display: flex; justify-content: space-between; align-items: flex-end; }
+    .rise-stat { text-align: center; }
+    .rise-stat .val { font-size: 16px; font-weight: 800; }
+    .rise-stat .lbl { font-size: 9px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; }
+    .rise-hot { color: #f97316; }
+    .rise-rank { color: #9ca3af; }
+    .rise-trend { font-size: 11px; color: #6ee7b7; margin-top: 8px; font-weight: 600; }
+
     /* ── PRIZES FOOTER ── */
     .prizes-bar {
       background: #111827; border-radius: 8px; padding: 20px 24px;
@@ -288,6 +317,12 @@
   <div class="podium-section">
     <h2>🏆 Top 3</h2>
     <div class="podium" id="podium"></div>
+  </div>
+
+  <!-- ON THE RISE -->
+  <div class="rise-section">
+    <h2>🔥 On Fire — Underdogs to Watch</h2>
+    <div class="rise-cards" id="riseCards"></div>
   </div>
 
   <!-- FULL TABLE -->
@@ -956,6 +991,65 @@ function filterBy(dept, btn) {
   renderTable(filtered);
 }
 
+function renderUnderdogs(data) {
+  const container = document.getElementById('riseCards');
+  if (!container) return;
+
+  const sorted = [...data].sort((a, b) => b.total - a.total);
+  const leaderPts = sorted[0]?.total || 1;
+
+  const candidates = sorted
+    .map((p, idx) => {
+      const recentPts = p.d15 + p.d16 + p.d17 + p.d18;
+      const earlierPts = p.group - (p.d15 + p.d16 + p.d17);
+      const earlierDays = Math.max((p.votes || 1) - 4, 1);
+      const avgEarly = earlierPts / earlierDays;
+      const avgRecent = recentPts / 4;
+      const momentum = avgRecent - avgEarly;
+      const gap = leaderPts - p.total;
+      return { ...p, rank: idx + 1, recentPts, momentum, gap };
+    })
+    .filter(p => p.rank > 3 && p.momentum >= 3 && p.gap < leaderPts * 0.25)
+    .sort((a, b) => b.momentum - a.momentum)
+    .slice(0, 4);
+
+  if (candidates.length === 0) {
+    container.innerHTML = '<p style="color:#6b7280;font-size:13px;">Check back after more knockout results are in.</p>';
+    return;
+  }
+
+  const colors = ['#7c3aed','#0050F0','#059669','#d97706'];
+  container.innerHTML = candidates.map((p, i) => {
+    const initials = p.name.split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
+    const gapText = p.gap <= 30 ? '🚨 Within striking distance!' : p.gap <= 60 ? '⚡ Closing fast' : '📈 Trending up';
+    return `
+    <div class="rise-card">
+      <div class="rise-card-header">
+        <div class="rise-avatar" style="background:${colors[i]}">${initials}</div>
+        <div>
+          <div class="rise-name">${p.name.split(' ')[0]} ${p.name.split(' ')[1] || ''}</div>
+          <div class="rise-dept">${p.dept}</div>
+        </div>
+      </div>
+      <div class="rise-stats">
+        <div class="rise-stat">
+          <div class="val rise-hot">+${p.recentPts}</div>
+          <div class="lbl">Last 4 days</div>
+        </div>
+        <div class="rise-stat">
+          <div class="val" style="color:#fff">${p.total}</div>
+          <div class="lbl">Total pts</div>
+        </div>
+        <div class="rise-stat">
+          <div class="val rise-rank">#${p.rank}</div>
+          <div class="lbl">Rank</div>
+        </div>
+      </div>
+      <div class="rise-trend">${gapText} — ${p.gap} pts back</div>
+    </div>`;
+  }).join('');
+}
+
 function renderStats(data) {
   document.getElementById('participantCount').textContent = data.length;
   document.getElementById('currentPhase').textContent = CONFIG.currentPhase;
@@ -996,6 +1090,11 @@ function parseSheetCsv(csvText) {
       total:  parseInt(obj.total_pts)  || 0,
       votes:  parseInt(obj.votes_submitted) || 0,
       votes_total: parseInt(obj.votes_total) || 27,
+      group:  parseInt(obj['Group Stage Points']) || 0,
+      d15: parseInt(obj.d15_pts) || 0,
+      d16: parseInt(obj.d16_pts) || 0,
+      d17: parseInt(obj.d17_pts) || 0,
+      d18: parseInt(obj.d18_pts) || 0,
     };
   }).filter(p => p.name).sort((a, b) => b.total - a.total);
 }
@@ -1020,6 +1119,7 @@ async function loadData() {
 
   renderStats(data);
   renderPodium(data);
+  renderUnderdogs(data);
   renderFilters(data);
   renderTable(filtered);
   updateTimestamp();
