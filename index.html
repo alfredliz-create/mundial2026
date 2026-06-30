@@ -916,7 +916,7 @@ function renderTable(data) {
         </td>
         <td class="pts-cell">
           <div class="pts-total">${p.total}</div>
-          <div class="pts-breakdown">${p.oracle}+${p.voting}+${p.bonus}</div>
+          <div class="pts-breakdown"><span style="color:#FFD700;font-weight:700;">${p.group}</span>+${p.ko}</div>
         </td>
         <td>
           <div class="vote-status ${voteColor}" title="${p.votes}/${p.votes_total} votes submitted">
@@ -991,6 +991,8 @@ function parseSheetCsv(csvText) {
       oracle: parseInt(obj.oracle_pts) || 0,
       voting: parseInt(obj.voting_pts) || 0,
       bonus:  parseInt(obj.bonus_pts)  || 0,
+      group:  parseInt(obj['Group Stage Points']) || 0,
+      ko:     parseInt(obj.total_pts) - (parseInt(obj['Group Stage Points']) || 0) || 0,
       total:  parseInt(obj.total_pts)  || 0,
       votes:  parseInt(obj.votes_submitted) || 0,
       votes_total: parseInt(obj.votes_total) || 27,
