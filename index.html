@@ -377,8 +377,8 @@ const CONFIG = {
   maxPoints: 875,
 
   // Current tournament phase label
-  currentPhase: 'Round of 32',
-  nextEvent: '⚡ Knockout Rounds — Jun 28+',
+  currentPhase: 'Quarterfinals',
+  nextEvent: '⚡ Semifinals — Jul 11+',
 };
 
 // ─────────────────────────────────────────────────
@@ -951,7 +951,18 @@ function renderTable(data) {
         </td>
         <td class="pts-cell">
           <div class="pts-total">${p.total}</div>
-          <div class="pts-breakdown"><span style="color:#FFD700;font-weight:700;">${p.group}</span>+${p.ko}</div>
+          <div class="pts-breakdown">${(()=>{
+            const ko = Math.max(0, p.total - p.group - p.oracle - p.voting - p.bonus - p.cinderella - p.golden_boot);
+            const parts = [];
+            if (p.group)       parts.push(`<span title="Group Stage picks" style="color:#FFD700;">GS:${p.group}</span>`);
+            if (ko)            parts.push(`<span title="Knockout picks">KO:${ko}</span>`);
+            if (p.voting)      parts.push(`<span title="Consistent voting bonus (2 pts/day)">✅${p.voting}</span>`);
+            if (p.oracle)      parts.push(`<span title="Oracle bonus — correct champion pick">🔮${p.oracle}</span>`);
+            if (p.cinderella)  parts.push(`<span title="Cinderella pick bonus — underdog advancing">🌠${p.cinderella}</span>`);
+            if (p.golden_boot) parts.push(`<span title="Golden Boot bonus — correct top scorer">👟${p.golden_boot}</span>`);
+            if (p.bonus)       parts.push(`<span title="Perfect day streak bonus">🔥${p.bonus}</span>`);
+            return parts.join(' · ') || '—';
+          })()}</div>
         </td>
         <td>
           <div class="vote-status ${voteColor}" title="${p.votes}/${p.votes_total} votes submitted">
@@ -1082,15 +1093,15 @@ function parseSheetCsv(csvText) {
       dept:   obj.department,
       country:obj.country,
       champion: obj.champion_pick,
-      oracle: parseInt(obj.oracle_pts) || 0,
-      voting: parseInt(obj.voting_pts) || 0,
-      bonus:  parseInt(obj.bonus_pts)  || 0,
-      group:  parseInt(obj['Group Stage Points']) || 0,
-      ko:     parseInt(obj.total_pts) - (parseInt(obj['Group Stage Points']) || 0) || 0,
-      total:  parseInt(obj.total_pts)  || 0,
-      votes:  parseInt(obj.votes_submitted) || 0,
-      votes_total: parseInt(obj.votes_total) || 27,
-      group:  parseInt(obj['Group Stage Points']) || 0,
+      oracle:       parseInt(obj.oracle_pts)       || 0,
+      voting:       parseInt(obj.voting_pts)       || 0,
+      bonus:        parseInt(obj.bonus_pts)        || 0,
+      cinderella:   parseInt(obj.cinderella_pts)   || 0,
+      golden_boot:  parseInt(obj.golden_boot_pts)  || 0,
+      group:        parseInt(obj['Group Stage Points']) || 0,
+      total:        parseInt(obj.total_pts)        || 0,
+      votes:        parseInt(obj.votes_submitted)  || 0,
+      votes_total:  parseInt(obj.votes_total)      || 25,
       d15: parseInt(obj.d15_pts) || 0,
       d16: parseInt(obj.d16_pts) || 0,
       d17: parseInt(obj.d17_pts) || 0,
